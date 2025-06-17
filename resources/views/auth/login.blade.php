@@ -5,6 +5,13 @@
     <div class="card-body">
         <h3 class="mb-4 text-center">Login</h3>
 
+        {{-- Demo credentials for presentation --}}
+        <div class="alert alert-info text-center">
+            <strong>Admin Demo Login:</strong><br>
+            <span>Email:</span> <code>admin@example.com</code><br>
+            <span>Password:</span> <code>password</code>
+        </div>
+
         @if (session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
         @endif
@@ -40,9 +47,3 @@
     </div>
 </div>
 @endsection
-
-@if (session('success'))
-<div class="alert alert-success">
-    {{ session('success') }}
-</div>
-@endif
