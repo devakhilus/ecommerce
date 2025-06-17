@@ -163,7 +163,8 @@
 
     function fetchProducts(reset = false) {
         if (reset) offset = 0;
-        const url = `/api/products?limit=${limit}&offset=${offset}&search=${encodeURIComponent(currentSearch)}`;
+
+        const url = `/products-api?limit=${limit}&offset=${offset}&search=${encodeURIComponent(currentSearch)}`;
 
         fetch(url)
             .then(res => {
