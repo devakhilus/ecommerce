@@ -23,7 +23,7 @@
       "DB_PORT": "3306",
       "DB_DATABASE": "myproject123_ecommerceadmin",
       "DB_USERNAME": "416998",
-      "DB_PASSWORD": "@bookman121",
+      "DB_PASSWORD": "bookman121",
   
       "CACHE_DRIVER": "array",
       "LOG_CHANNEL": "stderr",
