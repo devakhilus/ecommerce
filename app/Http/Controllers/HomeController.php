@@ -25,7 +25,6 @@ class HomeController extends Controller
     $products = Product::with('category')
         ->when($search, function ($query, $search) {
             $query->where('name', 'like', "%{$search}%")
-                  ->orWhere('description', 'like', "%{$search}%")
                   ->orWhereHas('category', function ($q) use ($search) {
                       $q->where('name', 'like', "%{$search}%");
                   });
@@ -36,4 +35,5 @@ class HomeController extends Controller
         ->get();
 
     return response()->json($products);
-}    }
+}
+   }
