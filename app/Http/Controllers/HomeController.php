@@ -36,4 +36,4 @@ class HomeController extends Controller
         ->get();
 
     return response()->json($products);
-}
+}    }
