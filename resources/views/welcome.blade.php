@@ -123,86 +123,99 @@
         </div>
     </div>
 
-    <script>
-        const htmlEl = document.documentElement;
-        const toggleBtn = document.getElementById('theme-toggle');
-        const icon = document.getElementById('theme-icon');
+    <!-- ... keep your HTML head + styles exactly as-is ... -->
 
-        function applyTheme(theme) {
-            htmlEl.setAttribute('data-bs-theme', theme);
-            localStorage.setItem('theme', theme);
-            icon.textContent = theme === 'dark' ? '🌞' : '🌙';
+<!-- Inside <script> near the bottom -->
+<script>
+    const htmlEl = document.documentElement;
+    const toggleBtn = document.getElementById('theme-toggle');
+    const icon = document.getElementById('theme-icon');
+
+    function applyTheme(theme) {
+        htmlEl.setAttribute('data-bs-theme', theme);
+        localStorage.setItem('theme', theme);
+        icon.textContent = theme === 'dark' ? '🌞' : '🌙';
+    }
+
+    const savedTheme = localStorage.getItem('theme');
+    applyTheme(savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+
+    toggleBtn.addEventListener('click', () => {
+        const current = htmlEl.getAttribute('data-bs-theme');
+        applyTheme(current === 'dark' ? 'light' : 'dark');
+    });
+
+    setTimeout(() => {
+        const alert = document.querySelector('.fade-message');
+        if (alert) {
+            alert.style.opacity = '0';
+            setTimeout(() => alert.remove(), 500);
         }
+    }, 5000);
 
-        const savedTheme = localStorage.getItem('theme');
-        applyTheme(savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+    // AJAX product loader
+    let offset = 0;
+    const limit = 6;
+    let currentSearch = '';
+    const loadMoreBtn = document.getElementById('load-more');
+    const productList = document.getElementById('product-list');
+    const searchInput = document.getElementById('searchInput');
 
-        toggleBtn.addEventListener('click', () => {
-            const current = htmlEl.getAttribute('data-bs-theme');
-            applyTheme(current === 'dark' ? 'light' : 'dark');
-        });
+    function fetchProducts(reset = false) {
+        if (reset) offset = 0;
+        const url = `/api/products?limit=${limit}&offset=${offset}&search=${encodeURIComponent(currentSearch)}`;
 
-        setTimeout(() => {
-            const alert = document.querySelector('.fade-message');
-            if (alert) {
-                alert.style.opacity = '0';
-                setTimeout(() => alert.remove(), 500);
-            }
-        }, 5000);
+        fetch(url)
+            .then(res => {
+                if (!res.ok) {
+                    console.error("Fetch failed:", res.status, res.statusText);
+                    throw new Error(`Server responded with ${res.status}`);
+                }
+                return res.json();
+            })
+            .then(products => {
+                if (reset) {
+                    productList.innerHTML = '';
+                }
 
-        // AJAX product loader
-        let offset = 0;
-        const limit = 6;
-        let currentSearch = '';
-        const loadMoreBtn = document.getElementById('load-more');
-        const productList = document.getElementById('product-list');
-        const searchInput = document.getElementById('searchInput');
-
-        function fetchProducts(reset = false) {
-            if (reset) offset = 0;
-
-            fetch(`/api/products?limit=${limit}&offset=${offset}&search=${encodeURIComponent(currentSearch)}`)
-                .then(res => res.json())
-                .then(products => {
-                    if (reset) {
-                        productList.innerHTML = '';
-                    }
-
-                    products.forEach(product => {
-                        const col = document.createElement('div');
-                        col.className = 'col-md-4 col-sm-6';
-                        col.innerHTML = `
-                            <div class="card product-card h-100">
-                                <img src="${product.image_url ?? 'https://via.placeholder.com/300x200'}" class="card-img-top" alt="${product.name}">
-                                <div class="card-body d-flex flex-column">
-                                    <h5 class="card-title">${product.name}</h5>
-                                    <p class="card-text flex-grow-1">${(product.description ?? '').substring(0, 100)}</p>
-                                    <p class="fw-bold">₹${parseFloat(product.price).toFixed(2)}</p>
-                                    <a href="/product/${product.id}" class="btn btn-primary mt-auto">Buy Now</a>
-                                </div>
-                            </div>`;
-                        productList.appendChild(col);
-                    });
-
-                    offset += limit;
-                    loadMoreBtn.style.display = products.length < limit ? 'none' : 'inline-block';
+                products.forEach(product => {
+                    const col = document.createElement('div');
+                    col.className = 'col-md-4 col-sm-6';
+                    col.innerHTML = `
+                        <div class="card product-card h-100">
+                            <img src="${product.image_url ?? 'https://via.placeholder.com/300x200'}" class="card-img-top" alt="${product.name}">
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title">${product.name}</h5>
+                                <p class="card-text flex-grow-1">${(product.description ?? '').substring(0, 100)}</p>
+                                <p class="fw-bold">₹${parseFloat(product.price).toFixed(2)}</p>
+                                <a href="/product/${product.id}" class="btn btn-primary mt-auto">Buy Now</a>
+                            </div>
+                        </div>`;
+                    productList.appendChild(col);
                 });
-        }
 
-        loadMoreBtn.addEventListener('click', () => fetchProducts());
+                offset += limit;
+                loadMoreBtn.style.display = products.length < limit ? 'none' : 'inline-block';
+            })
+            .catch(err => {
+                console.error("Fetch error:", err);
+            });
+    }
 
-        let typingTimer;
-        searchInput.addEventListener('input', () => {
-            clearTimeout(typingTimer);
-            typingTimer = setTimeout(() => {
-                currentSearch = searchInput.value.trim();
-                fetchProducts(true);
-            }, 300);
-        });
+    loadMoreBtn.addEventListener('click', () => fetchProducts());
 
-        // Initial load
-        fetchProducts();
-    </script>
+    let typingTimer;
+    searchInput.addEventListener('input', () => {
+        clearTimeout(typingTimer);
+        typingTimer = setTimeout(() => {
+            currentSearch = searchInput.value.trim();
+            fetchProducts(true);
+        }, 300);
+    });
+
+    // Initial load
+    fetchProducts();
+</script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
