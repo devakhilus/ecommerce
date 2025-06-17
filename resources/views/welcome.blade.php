@@ -184,7 +184,8 @@
                     col.className = 'col-md-4 col-sm-6';
                     col.innerHTML = `
                         <div class="card product-card h-100">
-                            <img src="${product.image_url ?? 'https://via.placeholder.com/300x200'}" class="card-img-top" alt="${product.name}">
+                            <img src="${product.image_url ?? 'https://placehold.co/300x200'}" class="card-img-top" alt="${product.name}">
+
                             <div class="card-body d-flex flex-column">
                                 <h5 class="card-title">${product.name}</h5>
                                 <p class="card-text flex-grow-1">${(product.description ?? '').substring(0, 100)}</p>
