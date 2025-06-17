@@ -70,7 +70,8 @@
 @push('scripts')
 <script>
     function fetchDashboardStats() {
-        fetch("{{ url('/admin/dashboard/stats') }}")
+        fetch("{{ secure_url('/admin/dashboard/stats') }}")
+
             .then(response => response.json())
             .then(data => {
                 document.getElementById('product-count').textContent = data.products;
