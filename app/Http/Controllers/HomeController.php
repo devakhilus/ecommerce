@@ -17,22 +17,23 @@ class HomeController extends Controller
         return view('welcome', compact('products'));
     }
     public function apiProducts(Request $request)
-    {
-        $limit = (int) $request->input('limit', 6);
-        $offset = (int) $request->input('offset', 0);
-        $search = $request->input('search');
+{
+    $limit = $request->input('limit', 6);
+    $offset = $request->input('offset', 0);
+    $search = $request->input('search', '');
 
-        $query = Product::with('category')->latest();
+    $products = Product::with('category')
+        ->when($search, function ($query, $search) {
+            $query->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%")
+                  ->orWhereHas('category', function ($q) use ($search) {
+                      $q->where('name', 'like', "%{$search}%");
+                  });
+        })
+        ->orderBy('created_at', 'desc')
+        ->offset($offset)
+        ->limit($limit)
+        ->get();
 
-        if ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhereHas('category', function ($q2) use ($search) {
-                        $q2->where('name', 'like', "%{$search}%");
-                    });
-            });
-        }
-
-        return response()->json($query->skip($offset)->take($limit)->get());
-    }
+    return response()->json($products);
 }
