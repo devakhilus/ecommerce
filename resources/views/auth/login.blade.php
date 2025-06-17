@@ -22,12 +22,7 @@
                     <h3 class="text-center mb-4 fw-bold">Admin Login</h3>
 
                     {{-- Hosting Info --}}
-                    <div class="alert alert-secondary text-center small rounded-3 mb-3">
-                        <strong>Project Hosting:</strong><br>
-                        🌐 Hosted on <strong>Vercel</strong> (PHP Runtime)<br>
-                        🛠️ Laravel Backend<br>
-                        🗄️ MySQL DB via AlwaysData.net
-                    </div>
+                    
 
                     {{-- Demo Credentials --}}
                     <div class="alert alert-info text-center small rounded-3 mb-3">
