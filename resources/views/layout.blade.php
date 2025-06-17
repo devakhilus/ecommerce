@@ -4,8 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laravel Auth</title>
+    <title>@yield('title')</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
         body {
             background-color: var(--bs-body-bg);
@@ -30,31 +31,32 @@
             padding: 2rem;
         }
 
+        @media (min-width: 992px) {
+            .auth-card {
+                max-width: 500px;
+            }
+        }
+
         .theme-toggle {
             position: absolute;
             top: 20px;
             right: 20px;
         }
     </style>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-
 </head>
 
 <body>
-
     <div class="auth-wrapper">
-        <!-- 🌗 Theme Toggle Button -->
         <button id="theme-toggle" class="btn btn-sm btn-outline-secondary theme-toggle">
             <span id="theme-icon">🌙</span>
         </button>
-
         <div class="auth-card">
             @yield('content')
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Bootstrap 5.3 dark mode toggle logic
         const htmlEl = document.documentElement;
         const toggleBtn = document.getElementById('theme-toggle');
         const icon = document.getElementById('theme-icon');
@@ -65,7 +67,6 @@
             icon.textContent = theme === 'dark' ? '🌞' : '🌙';
         }
 
-        // Initialize theme
         const savedTheme = localStorage.getItem('theme');
         if (savedTheme) {
             applyTheme(savedTheme);
@@ -74,7 +75,6 @@
             applyTheme(systemDark ? 'dark' : 'light');
         }
 
-        // Toggle button handler
         toggleBtn.addEventListener('click', () => {
             const currentTheme = htmlEl.getAttribute('data-bs-theme');
             const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
