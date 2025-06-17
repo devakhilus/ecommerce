@@ -3,7 +3,17 @@
 @section('title', 'Login')
 
 @section('content')
-<div class="container py-5">
+<style>
+    body {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+    }
+</style>
+
+<div class="container">
     <div class="row justify-content-center">
         <div class="col-md-6 col-lg-5">
             <div class="card shadow rounded-4">
@@ -11,27 +21,27 @@
 
                     <h3 class="text-center mb-4 fw-bold">Admin Login</h3>
 
-                    {{-- Project Hosting Info --}}
-                    <div class="alert alert-secondary rounded-3 text-center small mb-4">
-                        <strong>Project Info:</strong><br>
+                    {{-- Hosting Info --}}
+                    <div class="alert alert-secondary text-center small rounded-3 mb-3">
+                        <strong>Project Hosting:</strong><br>
                         🌐 Hosted on <strong>Vercel</strong> (PHP Runtime)<br>
-                        🛠️ Backend: <strong>Laravel</strong><br>
-                        🗄️ DB: <strong>MySQL @ AlwaysData.net</strong>
+                        🛠️ Laravel Backend<br>
+                        🗄️ MySQL DB via AlwaysData.net
                     </div>
 
                     {{-- Demo Credentials --}}
-                    <div class="alert alert-info rounded-3 text-center small mb-4">
-                        <strong>Demo Credentials:</strong><br>
-                        <span>Email:</span> <code>admin@example.com</code><br>
-                        <span>Password:</span> <code>password</code>
+                    <div class="alert alert-info text-center small rounded-3 mb-3">
+                        <strong>Demo Admin:</strong><br>
+                        Email: <code>admin@example.com</code><br>
+                        Password: <code>password</code>
                     </div>
 
-                    {{-- Session Success --}}
+                    {{-- Success Message --}}
                     @if (session('success'))
                         <div class="alert alert-success text-center">{{ session('success') }}</div>
                     @endif
 
-                    {{-- Validation Errors --}}
+                    {{-- Error Messages --}}
                     @if ($errors->any())
                         <div class="alert alert-danger">
                             <ul class="mb-0">
@@ -43,7 +53,7 @@
                     @endif
 
                     {{-- Login Form --}}
-                    <form method="POST" action="{{ url('/login') }}" class="mt-3">
+                    <form method="POST" action="{{ url('/login') }}">
                         @csrf
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Email address</label>
@@ -59,7 +69,7 @@
                     </form>
 
                     <p class="text-center mt-3 mb-0">
-                        Don’t have an account?
+                        Don't have an account?
                         <a href="{{ url('/register') }}">Register here</a>
                     </p>
 
