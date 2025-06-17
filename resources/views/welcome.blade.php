@@ -24,29 +24,49 @@
 
         .hero {
             background: url('https://images.unsplash.com/photo-1523275335684-37898b6baf30?fit=crop&w=1350&q=80') center/cover no-repeat;
-            height: 300px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            height: auto;
+            padding: 60px 15px 40px;
             color: white;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
         }
 
+        .search-box {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
         .product-card {
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
             border-radius: 8px;
             overflow: hidden;
-            transition: transform 0.2s ease-in-out;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
         }
 
         .product-card:hover {
             transform: translateY(-5px);
         }
+
+        .fade-message {
+            position: fixed;
+            top: 70px;
+            right: 20px;
+            z-index: 1050;
+            min-width: 250px;
+        }
+
+        @media (max-width: 768px) {
+            .product-card img {
+                height: 180px;
+                object-fit: cover;
+            }
+        }
     </style>
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg">
+
+    <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container">
             <a class="navbar-brand" href="/">MiniAmazon</a>
             <div class="d-flex align-items-center ms-auto gap-2">
@@ -61,7 +81,7 @@
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                         <li><a class="dropdown-item" href="/profile">Profile</a></li>
-                         <li><a class="dropdown-item" href="/dashboard">Dashboard</a></li>
+                        <li><a class="dropdown-item" href="/dashboard">Dashboard</a></li>
                         <li><a class="dropdown-item" href="/logout">Logout</a></li>
                     </ul>
                 </div>
@@ -69,42 +89,39 @@
                 <a class="btn btn-outline-light btn-sm" href="/login">Login</a>
                 <a class="btn btn-light btn-sm" href="/register">Register</a>
                 @endauth
-                {{-- Cart Button (Always visible) --}}
+
                 <a href="{{ auth()->check() ? '/cart' : '/login' }}" class="btn btn-outline-light btn-sm position-relative">
                     🛒 Cart
                     <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
                         {{ session('cart_count', 0) }}
                     </span>
                 </a>
-
             </div>
         </div>
     </nav>
+
     @if(session('success'))
-    <div class="alert alert-success fade-message">{{ session('success') }}</div>
+    <div class="alert alert-success fade-message">
+        {{ session('success') }}
+    </div>
     @endif
+
+    <!-- Hero with Search -->
     <div class="hero text-center">
-        <h1>Welcome to Mini Amazon</h1>
-    </div>
-
-    <div class="container my-5">
-        <h3 class="mb-4">Featured Products</h3>
-        <div class="row g-4">
-            @for ($i = 0; $i < 6; $i++)
-                <div class="col-md-4">
-                <div class="card product-card">
-                    <img src="https://via.placeholder.com/300x200" class="card-img-top" alt="Product Image">
-                    <div class="card-body">
-                        <h5 class="card-title">Product {{ $i+1 }}</h5>
-                        <p class="card-text">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-                        <a href="#" class="btn btn-primary">Buy Now</a>
-                    </div>
-                </div>
+        <h1 class="mb-4">Welcome to Mini Amazon</h1>
+        <div class="search-box">
+            <input type="text" id="searchInput" class="form-control" placeholder="Search for products or categories...">
         </div>
-        @endfor
-    </div>
     </div>
 
+    <!-- Product Section -->
+    <div class="container my-5">
+        <h3 class="mb-4 text-center">Featured Products</h3>
+        <div class="row g-4" id="product-list"></div>
+        <div class="text-center mt-4">
+            <button id="load-more" class="btn btn-outline-primary">Load More</button>
+        </div>
+    </div>
 
     <script>
         const htmlEl = document.documentElement;
@@ -118,28 +135,75 @@
         }
 
         const savedTheme = localStorage.getItem('theme');
-        if (savedTheme) {
-            applyTheme(savedTheme);
-        } else {
-            const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-            applyTheme(systemDark ? 'dark' : 'light');
-        }
+        applyTheme(savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
 
         toggleBtn.addEventListener('click', () => {
-            const currentTheme = htmlEl.getAttribute('data-bs-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            applyTheme(newTheme);
+            const current = htmlEl.getAttribute('data-bs-theme');
+            applyTheme(current === 'dark' ? 'light' : 'dark');
         });
-        setTimeout(function() {
+
+        setTimeout(() => {
             const alert = document.querySelector('.fade-message');
             if (alert) {
-                alert.classList.add('fade');
-                alert.classList.add('show');
                 alert.style.opacity = '0';
                 setTimeout(() => alert.remove(), 500);
             }
         }, 5000);
+
+        // AJAX product loader
+        let offset = 0;
+        const limit = 6;
+        let currentSearch = '';
+        const loadMoreBtn = document.getElementById('load-more');
+        const productList = document.getElementById('product-list');
+        const searchInput = document.getElementById('searchInput');
+
+        function fetchProducts(reset = false) {
+            if (reset) offset = 0;
+
+            fetch(`/api/products?limit=${limit}&offset=${offset}&search=${encodeURIComponent(currentSearch)}`)
+                .then(res => res.json())
+                .then(products => {
+                    if (reset) {
+                        productList.innerHTML = '';
+                    }
+
+                    products.forEach(product => {
+                        const col = document.createElement('div');
+                        col.className = 'col-md-4 col-sm-6';
+                        col.innerHTML = `
+                            <div class="card product-card h-100">
+                                <img src="${product.image_url ?? 'https://via.placeholder.com/300x200'}" class="card-img-top" alt="${product.name}">
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title">${product.name}</h5>
+                                    <p class="card-text flex-grow-1">${(product.description ?? '').substring(0, 100)}</p>
+                                    <p class="fw-bold">₹${parseFloat(product.price).toFixed(2)}</p>
+                                    <a href="/product/${product.id}" class="btn btn-primary mt-auto">Buy Now</a>
+                                </div>
+                            </div>`;
+                        productList.appendChild(col);
+                    });
+
+                    offset += limit;
+                    loadMoreBtn.style.display = products.length < limit ? 'none' : 'inline-block';
+                });
+        }
+
+        loadMoreBtn.addEventListener('click', () => fetchProducts());
+
+        let typingTimer;
+        searchInput.addEventListener('input', () => {
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(() => {
+                currentSearch = searchInput.value.trim();
+                fetchProducts(true);
+            }, 300);
+        });
+
+        // Initial load
+        fetchProducts();
     </script>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
