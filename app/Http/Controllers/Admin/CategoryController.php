@@ -19,14 +19,11 @@ class CategoryController extends Controller
             $sortField = 'id';
         }
 
-        $categories = Category::orderBy($sortField, $sortOrder)->paginate(4)->appends([
-            'sort_by' => $sortField,
-            'order' => $sortOrder,
-        ]);
+        // 👉 Remove pagination
+        $categories = Category::orderBy($sortField, $sortOrder)->get();
 
         return view('admin.categories.index', compact('categories', 'sortField', 'sortOrder'));
     }
-
 
 
     public function create()
