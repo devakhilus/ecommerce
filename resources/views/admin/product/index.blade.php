@@ -2,6 +2,11 @@
 
 @section('title', 'Products')
 
+@push('styles')
+<!-- DataTables CSS (Bootstrap 5) -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+@endpush
+
 @section('content')
 <div class="content-header">
     <div class="container-fluid">
@@ -24,40 +29,24 @@
             <div class="card-header">
                 <h3 class="card-title">Product List</h3>
             </div>
-            <div class="card-body p-0">
-                <table class="table table-striped">
-                    <thead class="thead-dark">
+            <div class="card-body">
+                <table id="products-table" class="table table-striped table-bordered">
+                    <thead class="bg-dark text-white">
                         <tr>
-                            <th style="width: 5%">
-                                <a href="{{ route('products.index', ['sort' => 'id', 'direction' => $sortField === 'id' && $sortDirection === 'asc' ? 'desc' : 'asc']) }}" class="text-white">
-                                    ID {!! $sortField === 'id' ? ($sortDirection === 'asc' ? '↑' : '↓') : '' !!}
-                                </a>
-                            </th>
-                            <th>
-                                <a href="{{ route('products.index', ['sort' => 'name', 'direction' => $sortField === 'name' && $sortDirection === 'asc' ? 'desc' : 'asc']) }}" class="text-white">
-                                    Name {!! $sortField === 'name' ? ($sortDirection === 'asc' ? '↑' : '↓') : '' !!}
-                                </a>
-                            </th>
-                            <th>
-                                <a href="{{ route('products.index', ['sort' => 'price', 'direction' => $sortField === 'price' && $sortDirection === 'asc' ? 'desc' : 'asc']) }}" class="text-white">
-                                    Price {!! $sortField === 'price' ? ($sortDirection === 'asc' ? '↑' : '↓') : '' !!}
-                                </a>
-                            </th>
-                            <th>
-                                <a href="{{ route('products.index', ['sort' => 'stock', 'direction' => $sortField === 'stock' && $sortDirection === 'asc' ? 'desc' : 'asc']) }}" class="text-white">
-                                    Stock {!! $sortField === 'stock' ? ($sortDirection === 'asc' ? '↑' : '↓') : '' !!}
-                                </a>
-                            </th>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Price (₹)</th>
+                            <th>Stock</th>
                             <th>Category</th>
                             <th style="width: 20%">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($products as $product)
+                        @foreach($products as $product)
                         <tr>
                             <td>{{ $product->id }}</td>
                             <td>{{ $product->name }}</td>
-                            <td>₹{{ number_format($product->price, 2) }}</td>
+                            <td>{{ number_format($product->price, 2) }}</td>
                             <td>{{ $product->stock }}</td>
                             <td>{{ $product->category->name ?? '-' }}</td>
                             <td>
@@ -65,26 +54,41 @@
                                     <i class="fas fa-edit"></i> Edit
                                 </a>
                                 <form action="{{ route('products.destroy', $product->id) }}" method="POST" style="display:inline-block;">
-                                    @csrf @method('DELETE')
+                                    @csrf
+                                    @method('DELETE')
                                     <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
                                         <i class="fas fa-trash"></i> Delete
                                     </button>
                                 </form>
                             </td>
                         </tr>
-                        @empty
-                        <tr>
-                            <td colspan="6" class="text-center text-muted">No products found.</td>
-                        </tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
                 </table>
-            </div>
-            <div class="card-footer clearfix px-3">
-                {{ $products->appends(['sort' => $sortField, 'direction' => $sortDirection])->links() }}
             </div>
         </div>
 
     </div>
 </section>
 @endsection
+
+@push('scripts')
+<!-- jQuery and DataTables JS -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        $('#products-table').DataTable({
+            paging: true,
+            searching: true,
+            ordering: true,
+            responsive: true,
+            order: [
+                [0, 'desc']
+            ]
+        });
+    });
+</script>
+@endpush
