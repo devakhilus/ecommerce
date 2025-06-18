@@ -1,4 +1,3 @@
-{{-- resources/views/admin/layouts/master.blade.php --}}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -16,6 +15,7 @@
     <!-- AdminLTE -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
 
+    <!-- Styles from child views -->
     @stack('styles')
 </head>
 
@@ -44,6 +44,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/overlayscrollbars/1.13.1/js/jquery.overlayScrollbars.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
 
+    <!-- Scripts from child views -->
     @stack('scripts')
 </body>
 
