@@ -2,6 +2,11 @@
 
 @section('title', 'Users')
 
+@push('styles')
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+@endpush
+
 @section('content')
 <div class="content-header">
     <div class="container-fluid">
@@ -17,33 +22,21 @@
             <div class="card-header">
                 <h3 class="card-title">User List</h3>
             </div>
-            <div class="card-body p-0">
-                <table class="table table-striped">
+            <div class="card-body">
+                <table id="users-table" class="table table-striped table-bordered">
                     <thead class="thead-dark">
                         <tr>
-                            @php
-                            function sort_link($field, $label, $currentSort, $currentOrder) {
-                            $newOrder = ($currentSort === $field && $currentOrder === 'asc') ? 'desc' : 'asc';
-                            $arrow = '';
-                            if ($currentSort === $field) {
-                            $arrow = $currentOrder === 'asc' ? '↑' : '↓';
-                            }
-                            $url = request()->fullUrlWithQuery(['sort_by' => $field, 'order' => $newOrder]);
-                            return "<a href=\"$url\" class=\"text-white\">$label $arrow</a>";
-                            }
-                            @endphp
-
-                            <th>{!! sort_link('id', 'ID', $sortField, $sortOrder) !!}</th>
-                            <th>{!! sort_link('name', 'Name', $sortField, $sortOrder) !!}</th>
-                            <th>{!! sort_link('email', 'Email', $sortField, $sortOrder) !!}</th>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
                             <th>Verified</th>
-                            <th>{!! sort_link('is_admin', 'Role', $sortField, $sortOrder) !!}</th>
-                            <th>{!! sort_link('created_at', 'Created', $sortField, $sortOrder) !!}</th>
+                            <th>Role</th>
+                            <th>Created</th>
                             <th style="width: 20%">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($users as $user)
+                        @foreach($users as $user)
                         <tr>
                             <td>{{ $user->id }}</td>
                             <td>{{ $user->name }}</td>
@@ -65,7 +58,6 @@
                                 <a href="{{ route('admin.users.edit', $user->id) }}" class="btn btn-sm btn-warning">
                                     <i class="fas fa-edit"></i> Edit
                                 </a>
-
                                 <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" style="display:inline-block;">
                                     @csrf
                                     @method('DELETE')
@@ -75,20 +67,31 @@
                                 </form>
                             </td>
                         </tr>
-                        @empty
-                        <tr>
-                            <td colspan="7" class="text-center text-muted">No users found.</td>
-                        </tr>
-                        @endforelse
+                        @endforeach
                     </tbody>
                 </table>
-            </div>
-
-            <div class="card-footer clearfix px-3">
-                {{ $users->appends(['sort_by' => $sortField, 'order' => $sortOrder])->links() }}
             </div>
         </div>
 
     </div>
 </section>
 @endsection
+
+@push('scripts')
+<!-- DataTables JS -->
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#users-table').DataTable({
+            paging: true,
+            ordering: true,
+            info: true,
+            responsive: true,
+            order: [
+                [0, 'asc']
+            ] // sort by ID ascending
+        });
+    });
+</script>
+@endpush
