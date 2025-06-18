@@ -181,7 +181,7 @@
             if (reset) offset = 0;
             spinner.style.display = 'block';
 
-            fetch(`${BACKEND_URL}/api/products?limit=${limit}&offset=${offset}&search=${encodeURIComponent(currentSearch)}`)
+           fetch(`${BACKEND_URL}/products-api?limit=${limit}&offset=${offset}&search=${encodeURIComponent(currentSearch)}`)
                 .then(res => res.json())
                 .then(products => {
                     if (reset) productList.innerHTML = '';
