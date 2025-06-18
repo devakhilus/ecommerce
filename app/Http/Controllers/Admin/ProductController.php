@@ -11,17 +11,23 @@ class ProductController extends Controller
 {
     // Show list of products with pagination and sorting
     public function index(Request $request)
-    {
-        $sortField = $request->get('sort', 'id');
-        $sortDirection = $request->get('direction', 'asc');
+{
+    $sortField = $request->get('sort', 'id');
+    $sortDirection = $request->get('direction', 'asc');
 
-        $products = Product::with('category')
-            ->orderBy($sortField, $sortDirection)
-            ->paginate(2)
-            ->appends(['sort' => $sortField, 'direction' => $sortDirection]);
-
-        return view('admin.product.index', compact('products', 'sortField', 'sortDirection'));
+    // Optional: validate sort fields
+    $validSorts = ['id', 'name', 'price', 'stock', 'category_id', 'created_at'];
+    if (!in_array($sortField, $validSorts)) {
+        $sortField = 'id';
     }
+
+    $products = Product::with('category')
+        ->orderBy($sortField, $sortDirection)
+        ->get(); // fetch all products for client-side DataTables
+
+    return view('admin.product.index', compact('products', 'sortField', 'sortDirection'));
+}
+
 
     // Show form to create a new product
     public function create()
