@@ -25,7 +25,7 @@
                 <h3 class="card-title">Update Product</h3>
             </div>
 
-            <form action="{{ route('products.update', $product->id) }}" method="POST">
+            <form action="{{ route('products.update', $product->id) }}" method="POST" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
 
@@ -61,6 +61,22 @@
                         @error('stock')
                         <span class="invalid-feedback d-block">{{ $message }}</span>
                         @enderror
+                    </div>
+
+                    <!-- Picture Upload -->
+                    <div class="form-group">
+                        <label for="picture">Product Picture</label>
+                        <input type="file" name="picture" id="picture" class="form-control">
+                        @error('picture')
+                        <span class="text-danger">{{ $message }}</span>
+                        @enderror
+
+                        @if($product->picture)
+                        <div class="mt-2">
+                            <p>Current Picture:</p>
+                            <img src="{{ asset('storage/products/' . $product->picture) }}" alt="Product Image" height="100">
+                        </div>
+                        @endif
                     </div>
 
                     <!-- Category Dropdown -->
