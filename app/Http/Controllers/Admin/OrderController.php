@@ -11,22 +11,22 @@ use Illuminate\Http\Request;
 class OrderController extends Controller
 {
     public function index(Request $request)
-    {
-        $sort = $request->get('sort', 'id');
-        $direction = $request->get('direction', 'desc');
+{
+    $sort = $request->get('sort', 'id');
+    $direction = $request->get('direction', 'desc');
 
-        $validSorts = ['id', 'total', 'status', 'created_at'];
-        if (!in_array($sort, $validSorts)) {
-            $sort = 'id';
-        }
-
-        $orders = Order::with(['user', 'coupon'])
-            ->orderBy($sort, $direction)
-            ->paginate(8)
-            ->appends(['sort' => $sort, 'direction' => $direction]);
-
-        return view('admin.orders.index', compact('orders', 'sort', 'direction'));
+    $validSorts = ['id', 'total', 'status', 'created_at'];
+    if (!in_array($sort, $validSorts)) {
+        $sort = 'id';
     }
+
+    $orders = Order::with(['user', 'coupon'])
+        ->orderBy($sort, $direction)
+        ->get(); // 👈 No pagination here
+
+    return view('admin.orders.index', compact('orders', 'sort', 'direction'));
+}
+
 
 
     public function show(Order $order)
