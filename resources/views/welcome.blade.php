@@ -46,6 +46,12 @@
             transform: translateY(-5px);
         }
 
+        .product-card img {
+            height: 200px;
+            width: 100%;
+            object-fit: cover;
+        }
+
         .fade-message {
             position: fixed;
             top: 70px;
@@ -56,8 +62,7 @@
 
         @media (max-width: 768px) {
             .product-card img {
-                height: 180px;
-                object-fit: cover;
+                height: 150px;
             }
         }
     </style>
