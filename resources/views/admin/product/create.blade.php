@@ -25,7 +25,8 @@
                 <h3 class="card-title">Create Product</h3>
             </div>
 
-            <form action="{{ route('products.store') }}" method="POST">
+            <form action="{{ route('products.store') }}" method="POST" enctype="multipart/form-data">
+
                 @csrf
                 <div class="card-body">
                     <!-- Product Name -->
@@ -56,6 +57,10 @@
                         @error('stock')
                         <span class="invalid-feedback d-block">{{ $message }}</span>
                         @enderror
+                    </div>
+                    <div class="mb-3">
+                        <label for="picture" class="form-label">Product Picture</label>
+                        <input type="file" class="form-control" name="picture" id="picture">
                     </div>
 
                     <!-- Category Dropdown -->
