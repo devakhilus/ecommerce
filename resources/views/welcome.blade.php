@@ -136,9 +136,10 @@
     </div>
 
     <!-- Dynamic Backend URL -->
-    <script>
-        const BACKEND_URL = "{{ url('') }}";
-    </script>
+   <script>
+    const BACKEND_URL = "{{ str_replace('http://', 'https://', url('')) }}";
+</script>
+
 
     <!-- Script -->
     <script>
