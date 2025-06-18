@@ -6,17 +6,17 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
-    // Show list of products with pagination and sorting
+    
     public function index(Request $request)
     {
         $sortField = $request->get('sort', 'id');
         $sortDirection = $request->get('direction', 'asc');
 
-        // Optional: validate sort fields
         $validSorts = ['id', 'name', 'price', 'stock', 'category_id', 'created_at'];
         if (!in_array($sortField, $validSorts)) {
             $sortField = 'id';
@@ -24,27 +24,27 @@ class ProductController extends Controller
 
         $products = Product::with('category')
             ->orderBy($sortField, $sortDirection)
-            ->get(); // fetch all products for client-side DataTables
+            ->get();
 
         return view('admin.product.index', compact('products', 'sortField', 'sortDirection'));
     }
 
-    // Show form to create a new product
+    
     public function create()
     {
         $categories = Category::all();
         return view('admin.product.create', compact('categories'));
     }
 
-    // Store new product
+    
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'price' => 'required|numeric',
-            'stock' => 'required|integer|min:0',
+            'name'        => 'required|string|max:255',
+            'price'       => 'required|numeric',
+            'stock'       => 'required|integer|min:0',
             'category_id' => 'required|exists:categories,id',
-            'picture' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // validate image
+            'picture'     => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
         $data = $request->only(['name', 'price', 'stock', 'category_id']);
@@ -52,7 +52,21 @@ class ProductController extends Controller
         if ($request->hasFile('picture')) {
             $file = $request->file('picture');
             $filename = time() . '_' . $file->getClientOriginalName();
-            $file->storeAs('public/products', $filename);
+            $base64 = base64_encode(file_get_contents($file));
+
+            $githubResponse = Http::withToken(env('GITHUB_TOKEN'))->put(
+                "https://api.github.com/repos/" . env('GITHUB_REPO') . "/contents/" . env('GITHUB_PATH') . "/$filename",
+                [
+                    'message' => "Add product image: $filename",
+                    'content' => $base64,
+                    'branch'  => env('GITHUB_BRANCH'),
+                ]
+            );
+
+            if ($githubResponse->failed()) {
+                return back()->withErrors(['picture' => 'Failed to upload image to GitHub.']);
+            }
+
             $data['picture'] = $filename;
         }
 
@@ -61,7 +75,6 @@ class ProductController extends Controller
         return redirect()->route('products.index')->with('success', 'Product created successfully.');
     }
 
-
     // Show form to edit a product
     public function edit(Product $product)
     {
@@ -69,7 +82,7 @@ class ProductController extends Controller
         return view('admin.product.edit', compact('product', 'categories'));
     }
 
-    // Update product
+    // Update product (image upload to GitHub)
     public function update(Request $request, Product $product)
     {
         $request->validate([
@@ -80,14 +93,27 @@ class ProductController extends Controller
             'picture'     => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
         ]);
 
-        $data = $request->all();
+        $data = $request->only(['name', 'price', 'stock', 'category_id']);
 
         if ($request->hasFile('picture')) {
-            // Delete old picture if exists
-            if ($product->picture) {
-                Storage::disk('public')->delete($product->picture);
+            $file = $request->file('picture');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $base64 = base64_encode(file_get_contents($file));
+
+            $githubResponse = Http::withToken(env('GITHUB_TOKEN'))->put(
+                "https://api.github.com/repos/" . env('GITHUB_REPO') . "/contents/" . env('GITHUB_PATH') . "/$filename",
+                [
+                    'message' => "Update product image: $filename",
+                    'content' => $base64,
+                    'branch'  => env('GITHUB_BRANCH'),
+                ]
+            );
+
+            if ($githubResponse->failed()) {
+                return back()->withErrors(['picture' => 'Failed to upload image to GitHub.']);
             }
-            $data['picture'] = $request->file('picture')->store('products', 'public');
+
+            $data['picture'] = $filename;
         }
 
         $product->update($data);
