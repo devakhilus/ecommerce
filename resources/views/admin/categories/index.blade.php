@@ -2,6 +2,11 @@
 
 @section('title', 'Categories')
 
+@push('styles')
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+@endpush
+
 @section('content')
 <div class="content-header">
     <div class="container-fluid">
@@ -24,20 +29,12 @@
             <div class="card-header">
                 <h3 class="card-title">Category List</h3>
             </div>
-            <div class="card-body p-0">
-                <table class="table table-striped">
+            <div class="card-body">
+                <table id="categories-table" class="table table-striped table-bordered">
                     <thead class="thead-dark">
                         <tr>
-                            <th style="width: 10%">
-                                <a href="{{ route('categories.index', ['sort_by' => 'id', 'order' => ($sortField === 'id' && $sortOrder === 'asc') ? 'desc' : 'asc']) }}" class="text-white">
-                                    ID {!! $sortField === 'id' ? ($sortOrder === 'asc' ? '↑' : '↓') : '' !!}
-                                </a>
-                            </th>
-                            <th>
-                                <a href="{{ route('categories.index', ['sort_by' => 'name', 'order' => ($sortField === 'name' && $sortOrder === 'asc') ? 'desc' : 'asc']) }}" class="text-white">
-                                    Name {!! $sortField === 'name' ? ($sortOrder === 'asc' ? '↑' : '↓') : '' !!}
-                                </a>
-                            </th>
+                            <th>ID</th>
+                            <th>Name</th>
                             <th style="width: 20%">Actions</th>
                         </tr>
                     </thead>
@@ -66,11 +63,27 @@
                     </tbody>
                 </table>
             </div>
-            <div class="card-footer clearfix px-3">
-                {{ $categories->appends(['sort_by' => $sortField, 'order' => $sortOrder])->links() }}
-            </div>
         </div>
 
     </div>
 </section>
 @endsection
+
+@push('scripts')
+<!-- DataTables JS -->
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#categories-table').DataTable({
+            paging: true,
+            ordering: true,
+            info: true,
+            responsive: true,
+            order: [
+                [0, 'asc']
+            ]
+        });
+    });
+</script>
+@endpush
