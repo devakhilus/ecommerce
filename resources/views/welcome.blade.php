@@ -24,7 +24,6 @@
 
         .hero {
             background: url('https://images.unsplash.com/photo-1523275335684-37898b6baf30?fit=crop&w=1350&q=80') center/cover no-repeat;
-            height: auto;
             padding: 60px 15px 40px;
             color: white;
             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
@@ -76,10 +75,10 @@
 
                 @auth
                 <div class="dropdown">
-                    <button class="btn btn-light btn-sm dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
                         👤 {{ Auth::user()->name }}
                     </button>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                    <ul class="dropdown-menu dropdown-menu-end">
                         <li><a class="dropdown-item" href="/profile">Profile</a></li>
                         <li><a class="dropdown-item" href="/dashboard">Dashboard</a></li>
                         <li><a class="dropdown-item" href="/logout">Logout</a></li>
@@ -117,75 +116,70 @@
     <!-- Product Section -->
     <div class="container my-5">
         <h3 class="mb-4 text-center">Featured Products</h3>
+
+        <div class="text-center my-3" id="loading-spinner" style="display:none;">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+
         <div class="row g-4" id="product-list"></div>
+
         <div class="text-center mt-4">
             <button id="load-more" class="btn btn-outline-primary">Load More</button>
         </div>
     </div>
 
-    <!-- ... keep your HTML head + styles exactly as-is ... -->
+    <script>
+        const htmlEl = document.documentElement;
+        const toggleBtn = document.getElementById('theme-toggle');
+        const icon = document.getElementById('theme-icon');
 
-<!-- Inside <script> near the bottom -->
-<script>
-    const htmlEl = document.documentElement;
-    const toggleBtn = document.getElementById('theme-toggle');
-    const icon = document.getElementById('theme-icon');
-
-    function applyTheme(theme) {
-        htmlEl.setAttribute('data-bs-theme', theme);
-        localStorage.setItem('theme', theme);
-        icon.textContent = theme === 'dark' ? '🌞' : '🌙';
-    }
-
-    const savedTheme = localStorage.getItem('theme');
-    applyTheme(savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
-
-    toggleBtn.addEventListener('click', () => {
-        const current = htmlEl.getAttribute('data-bs-theme');
-        applyTheme(current === 'dark' ? 'light' : 'dark');
-    });
-
-    setTimeout(() => {
-        const alert = document.querySelector('.fade-message');
-        if (alert) {
-            alert.style.opacity = '0';
-            setTimeout(() => alert.remove(), 500);
+        function applyTheme(theme) {
+            htmlEl.setAttribute('data-bs-theme', theme);
+            localStorage.setItem('theme', theme);
+            icon.textContent = theme === 'dark' ? '🌞' : '🌙';
         }
-    }, 5000);
 
-    // AJAX product loader
-    let offset = 0;
-    const limit = 6;
-    let currentSearch = '';
-    const loadMoreBtn = document.getElementById('load-more');
-    const productList = document.getElementById('product-list');
-    const searchInput = document.getElementById('searchInput');
+        const savedTheme = localStorage.getItem('theme');
+        applyTheme(savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
 
-    function fetchProducts(reset = false) {
-        if (reset) offset = 0;
+        toggleBtn.addEventListener('click', () => {
+            const current = htmlEl.getAttribute('data-bs-theme');
+            applyTheme(current === 'dark' ? 'light' : 'dark');
+        });
 
-        const url = `/products-api?limit=${limit}&offset=${offset}&search=${encodeURIComponent(currentSearch)}`;
+        setTimeout(() => {
+            const alert = document.querySelector('.fade-message');
+            if (alert) {
+                alert.style.opacity = '0';
+                setTimeout(() => alert.remove(), 500);
+            }
+        }, 5000);
 
-        fetch(url)
-            .then(res => {
-                if (!res.ok) {
-                    console.error("Fetch failed:", res.status, res.statusText);
-                    throw new Error(`Server responded with ${res.status}`);
-                }
-                return res.json();
-            })
-            .then(products => {
-                if (reset) {
-                    productList.innerHTML = '';
-                }
+        let offset = 0;
+        const limit = 6;
+        let currentSearch = '';
+        const loadMoreBtn = document.getElementById('load-more');
+        const productList = document.getElementById('product-list');
+        const searchInput = document.getElementById('searchInput');
+        const spinner = document.getElementById('loading-spinner');
 
-                products.forEach(product => {
-                    const col = document.createElement('div');
-                    col.className = 'col-md-4 col-sm-6';
-                    col.innerHTML = `
+        function fetchProducts(reset = false) {
+            if (reset) offset = 0;
+            spinner.style.display = 'block';
+
+            fetch(`/api/products?limit=${limit}&offset=${offset}&search=${encodeURIComponent(currentSearch)}`)
+                .then(res => res.json())
+                .then(products => {
+                    if (reset) productList.innerHTML = '';
+
+                    products.forEach(product => {
+                        const col = document.createElement('div');
+                        col.className = 'col-md-4 col-sm-6';
+                        col.innerHTML = `
                         <div class="card product-card h-100">
-                            <img src="${product.image_url ?? 'https://placehold.co/300x200'}" class="card-img-top" alt="${product.name}">
-
+                            <img src="${product.image_url ?? 'https://via.placeholder.com/300x200'}" class="card-img-top" alt="${product.name}">
                             <div class="card-body d-flex flex-column">
                                 <h5 class="card-title">${product.name}</h5>
                                 <p class="card-text flex-grow-1">${(product.description ?? '').substring(0, 100)}</p>
@@ -193,31 +187,31 @@
                                 <a href="/product/${product.id}" class="btn btn-primary mt-auto">Buy Now</a>
                             </div>
                         </div>`;
-                    productList.appendChild(col);
+                        productList.appendChild(col);
+                    });
+
+                    offset += limit;
+                    loadMoreBtn.style.display = products.length < limit ? 'none' : 'inline-block';
+                })
+                .finally(() => {
+                    spinner.style.display = 'none';
                 });
+        }
 
-                offset += limit;
-                loadMoreBtn.style.display = products.length < limit ? 'none' : 'inline-block';
-            })
-            .catch(err => {
-                console.error("Fetch error:", err);
-            });
-    }
+        loadMoreBtn.addEventListener('click', () => fetchProducts());
 
-    loadMoreBtn.addEventListener('click', () => fetchProducts());
+        let typingTimer;
+        searchInput.addEventListener('input', () => {
+            clearTimeout(typingTimer);
+            typingTimer = setTimeout(() => {
+                currentSearch = searchInput.value.trim();
+                fetchProducts(true);
+            }, 300);
+        });
 
-    let typingTimer;
-    searchInput.addEventListener('input', () => {
-        clearTimeout(typingTimer);
-        typingTimer = setTimeout(() => {
-            currentSearch = searchInput.value.trim();
-            fetchProducts(true);
-        }, 300);
-    });
-
-    // Initial load
-    fetchProducts();
-</script>
+        // Initial load
+        fetchProducts();
+    </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
