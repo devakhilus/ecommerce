@@ -12,10 +12,9 @@ class HomeController extends Controller
     {
         $products = Product::latest()->take(6)->get();
 
-        // Append image URLs for blade rendering (optional)
         $products->transform(function ($product) {
             $product->image_url = $product->picture
-                ? asset('storage/' . $product->picture)
+                ? "https://raw.githubusercontent.com/" . env('GITHUB_REPO') . "/" . env('GITHUB_BRANCH') . "/" . env('GITHUB_PATH') . "/" . $product->picture
                 : 'https://via.placeholder.com/300x200';
             return $product;
         });
@@ -26,7 +25,7 @@ class HomeController extends Controller
     // API endpoint for AJAX "Load More" products
     public function apiProducts(Request $request)
     {
-        $limit = (int) $request->input('limit', 6);
+        $limit  = (int) $request->input('limit', 6);
         $offset = (int) $request->input('offset', 0);
         $search = $request->input('search');
 
@@ -43,10 +42,9 @@ class HomeController extends Controller
 
         $products = $query->skip($offset)->take($limit)->get();
 
-        // Add full image URL to each product
         $products->transform(function ($product) {
             $product->image_url = $product->picture
-                ? asset('storage/' . $product->picture)
+                ? "https://raw.githubusercontent.com/" . env('GITHUB_REPO') . "/" . env('GITHUB_BRANCH') . "/" . env('GITHUB_PATH') . "/" . $product->picture
                 : 'https://via.placeholder.com/300x200';
             return $product;
         });
