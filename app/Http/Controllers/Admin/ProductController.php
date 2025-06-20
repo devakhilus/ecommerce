@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Storage;
 
 class ProductController extends Controller
 {
-    
+
     public function index(Request $request)
     {
         $sortField = $request->get('sort', 'id');
@@ -29,14 +29,14 @@ class ProductController extends Controller
         return view('admin.product.index', compact('products', 'sortField', 'sortDirection'));
     }
 
-    
+
     public function create()
     {
         $categories = Category::all();
         return view('admin.product.create', compact('categories'));
     }
 
-    
+
     public function store(Request $request)
     {
         $request->validate([
@@ -64,6 +64,10 @@ class ProductController extends Controller
             );
 
             if ($githubResponse->failed()) {
+                \Log::error('GitHub upload failed', [
+                    'status' => $githubResponse->status(),
+                    'body' => $githubResponse->body(),
+                ]);
                 return back()->withErrors(['picture' => 'Failed to upload image to GitHub.']);
             }
 
@@ -100,17 +104,56 @@ class ProductController extends Controller
             $filename = time() . '_' . $file->getClientOriginalName();
             $base64 = base64_encode(file_get_contents($file));
 
-            $githubResponse = Http::withToken(env('GITHUB_TOKEN'))->put(
-                "https://api.github.com/repos/" . env('GITHUB_REPO') . "/contents/" . env('GITHUB_PATH') . "/$filename",
-                [
-                    'message' => "Update product image: $filename",
-                    'content' => $base64,
-                    'branch'  => env('GITHUB_BRANCH'),
-                ]
-            );
+            $githubPath = env('GITHUB_PATH') . '/' . $filename;
+            $apiUrl = "https://api.github.com/repos/" . env('GITHUB_REPO') . "/contents/" . $githubPath;
+
+            // Step 1: Check if new image already exists (to get sha if overwrite needed)
+            $sha = null;
+            $existing = Http::withToken(env('GITHUB_TOKEN'))->get($apiUrl, [
+                'ref' => env('GITHUB_BRANCH'),
+            ]);
+            if ($existing->ok()) {
+                $sha = $existing->json('sha');
+            }
+
+            // Step 2: Upload new image to GitHub
+            $uploadPayload = [
+                'message' => "Update product image: $filename",
+                'content' => $base64,
+                'branch'  => env('GITHUB_BRANCH'),
+            ];
+            if ($sha) {
+                $uploadPayload['sha'] = $sha;
+            }
+
+            $githubResponse = Http::withToken(env('GITHUB_TOKEN'))->put($apiUrl, $uploadPayload);
 
             if ($githubResponse->failed()) {
+                \Log::error('GitHub upload failed', [
+                    'status' => $githubResponse->status(),
+                    'body' => $githubResponse->body(),
+                ]);
                 return back()->withErrors(['picture' => 'Failed to upload image to GitHub.']);
+            }
+
+            // Step 3: Delete old image from GitHub (if it exists)
+            if ($product->picture) {
+                $oldFile = $product->picture;
+                $oldPath = env('GITHUB_PATH') . '/' . $oldFile;
+                $oldApiUrl = "https://api.github.com/repos/" . env('GITHUB_REPO') . "/contents/" . $oldPath;
+
+                $oldResponse = Http::withToken(env('GITHUB_TOKEN'))->get($oldApiUrl, [
+                    'ref' => env('GITHUB_BRANCH'),
+                ]);
+
+                if ($oldResponse->ok()) {
+                    $oldSha = $oldResponse->json('sha');
+                    Http::withToken(env('GITHUB_TOKEN'))->delete($oldApiUrl, [
+                        'message' => "Delete old image: $oldFile",
+                        'branch' => env('GITHUB_BRANCH'),
+                        'sha'    => $oldSha,
+                    ]);
+                }
             }
 
             $data['picture'] = $filename;
@@ -120,6 +163,8 @@ class ProductController extends Controller
 
         return redirect()->route('products.index')->with('success', 'Product updated successfully.');
     }
+
+
 
     // Delete product
     public function destroy(Product $product)
