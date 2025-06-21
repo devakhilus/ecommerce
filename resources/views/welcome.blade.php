@@ -94,7 +94,7 @@
         <div class="container">
             <h4 class="mb-3 fw-bold">🎉 Welcome to MiniAmazon</h4>
             <p class="lead">
-                Built with <strong>Laravel</strong>, hosted on <strong>Vercel (PHP Runtime)</strong>, uses <strong>MySQL (AlwaysData)</strong>, and stores product images via <strong>GitHub API</strong>.<br>
+                Built with <strong>Laravel</strong>, hosted on <strong>Vercel (PHP Runtime)</strong>, uses <strong>MySQL </strong>, and stores product images via <strong>GitHub API</strong>.<br>
                 Deploying Laravel on Vercel had unique challenges — but it's all working now!
             </p>
         </div>
