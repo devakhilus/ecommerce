@@ -19,7 +19,7 @@
         <strong>Project Hosting:</strong><br>
         🌐 Hosted on <strong>Vercel</strong> (PHP Runtime)<br>
         🛠️ Laravel Backend<br>
-        🗄️ MySQL DB via AlwaysData.net <br>
+        🗄️ MySQL DB  <br>
         <strong>Demo Admin:</strong><br>
         Email: <code>admin@example.com</code><br>
         Password: <code>password</code>
