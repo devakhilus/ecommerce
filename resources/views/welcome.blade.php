@@ -6,10 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mini Amazon</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
     <style>
         body {
             background-color: var(--bs-body-bg);
             color: var(--bs-body-color);
+            /* padding-top: 70px; */
         }
 
         .navbar {
@@ -52,24 +54,53 @@
             object-fit: cover;
         }
 
-        .fade-message {
-            position: fixed;
-            top: 70px;
-            right: 20px;
-            z-index: 1050;
-            min-width: 250px;
-        }
-
         @media (max-width: 768px) {
             .product-card img {
                 height: 150px;
             }
+        }
+
+        /* Fullscreen Overlay */
+        #site-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            background-color: #0dcaf0;
+            color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        #site-overlay .btn-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
         }
     </style>
 </head>
 
 <body>
 
+    <!-- Fullscreen Overlay Message -->
+    <div id="site-overlay">
+        <button type="button" class="btn-close" aria-label="Close" onclick="document.getElementById('site-overlay').style.display='none'"></button>
+        <div class="container">
+            <h4 class="mb-3 fw-bold">🎉 Welcome to MiniAmazon</h4>
+            <p class="lead">
+                Built with <strong>Laravel</strong>, hosted on <strong>Vercel (PHP Runtime)</strong>, uses <strong>MySQL (AlwaysData)</strong>, and stores product images via <strong>GitHub API</strong>.<br>
+                Deploying Laravel on Vercel had unique challenges — but it's all working now!
+            </p>
+        </div>
+    </div>
+
+    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container">
             <a class="navbar-brand" href="/">MiniAmazon</a>
@@ -105,12 +136,12 @@
     </nav>
 
     @if(session('success'))
-    <div class="alert alert-success fade-message">
+    <div class="alert alert-success fade-message position-fixed top-0 end-0 m-3">
         {{ session('success') }}
     </div>
     @endif
 
-    <!-- Hero with Search -->
+    <!-- Hero -->
     <div class="hero text-center">
         <h1 class="mb-4">Welcome to Mini Amazon</h1>
         <div class="search-box">
@@ -118,7 +149,7 @@
         </div>
     </div>
 
-    <!-- Product Section -->
+    <!-- Products -->
     <div class="container my-5">
         <h3 class="mb-4 text-center">Featured Products</h3>
 
@@ -136,12 +167,11 @@
     </div>
 
     <!-- Dynamic Backend URL -->
-   <script>
-    const BACKEND_URL = "{{ str_replace('http://', 'https://', url('')) }}";
-</script>
+    <script>
+        const BACKEND_URL = "{{ url('') }}";
+    </script>
 
-
-    <!-- Script -->
+    <!-- Theme + Product Scripts -->
     <script>
         const htmlEl = document.documentElement;
         const toggleBtn = document.getElementById('theme-toggle');
@@ -153,21 +183,12 @@
             icon.textContent = theme === 'dark' ? '🌞' : '🌙';
         }
 
-        const savedTheme = localStorage.getItem('theme');
-        applyTheme(savedTheme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+        applyTheme(localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
 
         toggleBtn.addEventListener('click', () => {
             const current = htmlEl.getAttribute('data-bs-theme');
             applyTheme(current === 'dark' ? 'light' : 'dark');
         });
-
-        setTimeout(() => {
-            const alert = document.querySelector('.fade-message');
-            if (alert) {
-                alert.style.opacity = '0';
-                setTimeout(() => alert.remove(), 500);
-            }
-        }, 5000);
 
         let offset = 0;
         const limit = 6;
@@ -181,24 +202,23 @@
             if (reset) offset = 0;
             spinner.style.display = 'block';
 
-           fetch(`${BACKEND_URL}/products-api?limit=${limit}&offset=${offset}&search=${encodeURIComponent(currentSearch)}`)
+            fetch(`${BACKEND_URL}/api/products-api?limit=${limit}&offset=${offset}&search=${encodeURIComponent(currentSearch)}`)
                 .then(res => res.json())
                 .then(products => {
                     if (reset) productList.innerHTML = '';
-
                     products.forEach(product => {
                         const col = document.createElement('div');
                         col.className = 'col-md-4 col-sm-6';
                         col.innerHTML = `
-                        <div class="card product-card h-100">
-                            <img src="${product.image_url ?? 'https://via.placeholder.com/300x200'}" class="card-img-top" alt="${product.name}">
-                            <div class="card-body d-flex flex-column">
-                                <h5 class="card-title">${product.name}</h5>
-                                <p class="card-text flex-grow-1">${(product.description ?? '').substring(0, 100)}</p>
-                                <p class="fw-bold">₹${parseFloat(product.price).toFixed(2)}</p>
-                                <a href="/product/${product.id}" class="btn btn-primary mt-auto">Buy Now</a>
-                            </div>
-                        </div>`;
+                            <div class="card product-card h-100">
+                                <img src="${product.image_url ?? 'https://via.placeholder.com/300x200'}" class="card-img-top" alt="${product.name}">
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title">${product.name}</h5>
+                                    <p class="card-text flex-grow-1">${(product.description ?? '').substring(0, 100)}</p>
+                                    <p class="fw-bold">₹${parseFloat(product.price).toFixed(2)}</p>
+                                    <a href="/product/${product.id}" class="btn btn-primary mt-auto">Buy Now</a>
+                                </div>
+                            </div>`;
                         productList.appendChild(col);
                     });
 
