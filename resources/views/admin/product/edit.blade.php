@@ -63,20 +63,51 @@
                         @enderror
                     </div>
 
-                    <!-- Picture Upload -->
+                    <!-- Picture Upload and Preview -->
                     <div class="form-group">
                         <label for="picture">Product Picture</label>
-                        <input type="file" name="picture" id="picture" class="form-control">
+                        <div class="custom-file">
+                            <input type="file" name="picture" id="picture" class="custom-file-input" accept="image/*">
+                            <label class="custom-file-label" for="picture">Choose image</label>
+                        </div>
                         @error('picture')
-                        <span class="text-danger">{{ $message }}</span>
+                        <span class="text-danger d-block mt-1">{{ $message }}</span>
                         @enderror
 
-                        @if($product->picture)
-                        <div class="mt-2">
-                            <p>Current Picture:</p>
-                            <img src="{{ asset('storage/products/' . $product->picture) }}" alt="Product Image" height="100">
+                        <div class="row mt-3">
+                            @if($product->picture)
+                            <div class="col-md-6">
+                                <div class="card card-outline card-info">
+                                    <div class="card-header">
+                                        <h3 class="card-title">Current Picture</h3>
+                                    </div>
+                                    <div class="card-body text-center">
+                                        <img id="current-picture"
+                                            src="https://raw.githubusercontent.com/{{ env('GITHUB_REPO') }}/{{ env('GITHUB_BRANCH') }}/{{ env('GITHUB_PATH') }}/{{ $product->picture }}"
+                                            alt="Product Image"
+                                            class="img-fluid img-thumbnail"
+                                            style="max-height: 200px;"
+                                            onerror="this.src='https://via.placeholder.com/300x200?text=Not+Found';">
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
+
+                            <div class="col-md-6">
+                                <div class="card card-outline card-warning">
+                                    <div class="card-header">
+                                        <h3 class="card-title">New Selected Picture Preview</h3>
+                                    </div>
+                                    <div class="card-body text-center">
+                                        <img id="preview-picture"
+                                            src="#"
+                                            alt="Preview"
+                                            class="img-fluid img-thumbnail"
+                                            style="max-height: 200px; display:none;" />
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        @endif
                     </div>
 
                     <!-- Category Dropdown -->
@@ -110,3 +141,31 @@
     </div>
 </section>
 @endsection
+
+@push('scripts')
+<script>
+    // Show selected file name
+    $('#picture').on('change', function() {
+        const fileName = $(this).val().split('\\').pop();
+        $(this).next('.custom-file-label').html(fileName);
+    });
+
+    // Show image preview
+    document.getElementById('picture').addEventListener('change', function(event) {
+        const preview = document.getElementById('preview-picture');
+        const file = event.target.files[0];
+
+        if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        } else {
+            preview.src = '';
+            preview.style.display = 'none';
+        }
+    });
+</script>
+@endpush
