@@ -168,8 +168,9 @@
 
     <!-- Dynamic Backend URL -->
     <script>
-        const BACKEND_URL = "{{ url('') }}";
-    </script>
+    const BACKEND_URL = "{{ secure_url('') }}";
+</script>
+
 
     <!-- Theme + Product Scripts -->
     <script>
