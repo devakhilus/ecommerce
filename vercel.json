@@ -1,0 +1,47 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "public/index.php",
+      "use": "vercel-php@0.7.3"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/images/(.*)",
+      "dest": "/public/images/$1"
+    },
+    {
+      "src": "/api/(.*)",
+      "dest": "/public/index.php"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/index.php"
+    }
+  ],
+  "env": {
+    "APP_ENV": "production",
+    "APP_KEY": "base64:msDg/qwYNdenc/0mYR9GGp9QyvjI7Tx+AfNfV1ZsuI8=",
+    "APP_DEBUG": "true",
+    "APP_URL": "https://ecommerce-sage-gamma.vercel.app",
+
+    "DB_CONNECTION": "mysql",
+    "DB_HOST": "mysql-myproject123.alwaysdata.net",
+    "DB_PORT": "3306",
+    "DB_DATABASE": "myproject123_ecommerceadmin",
+    "DB_USERNAME": "416998",
+    "DB_PASSWORD": "bookman121",
+
+    "CACHE_DRIVER": "array",
+    "LOG_CHANNEL": "stderr",
+    "SESSION_DRIVER": "cookie",
+
+    "APP_CONFIG_CACHE": "/tmp/config.php",
+    "APP_EVENTS_CACHE": "/tmp/events.php",
+    "APP_PACKAGES_CACHE": "/tmp/packages.php",
+    "APP_ROUTES_CACHE": "/tmp/routes.php",
+    "APP_SERVICES_CACHE": "/tmp/services.php",
+    "VIEW_COMPILED_PATH": "/tmp"
+  }
+}
