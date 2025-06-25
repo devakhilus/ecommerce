@@ -52,17 +52,57 @@
             object-fit: cover;
         }
 
+        #cart-panel {
+            position: fixed;
+            right: 0;
+            top: 60px;
+            width: 350px;
+            height: calc(100% - 60px);
+            background-color: var(--bs-body-bg);
+            color: var(--bs-body-color);
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+            z-index: 1050;
+            padding: 1rem;
+            overflow-y: auto;
+            display: none;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .cart-item {
+            border-bottom: 1px solid #ddd;
+            padding: 10px 0;
+        }
+
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+
+        .qty-controls button {
+            padding: 2px 8px;
+        }
+
+        .remove-btn {
+            color: red;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
         @media (max-width: 768px) {
             .product-card img {
                 height: 150px;
+            }
+
+            #cart-panel {
+                width: 100%;
+                top: 56px;
+                height: calc(100% - 56px);
             }
         }
     </style>
 </head>
 
-<body>
 
-    <!-- Navbar -->
+<body>
     <nav class="navbar navbar-expand-lg sticky-top">
         <div class="container">
             <a class="navbar-brand" href="/">MiniAmazon</a>
@@ -70,8 +110,8 @@
                 <button id="theme-toggle" class="btn btn-outline-light btn-sm">
                     <span id="theme-icon">🌙</span>
                 </button>
-
                 @auth
+                <a href="/admin" class="btn btn-warning btn-sm">Admin</a>
                 <div class="dropdown">
                     <button class="btn btn-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
                         👤 {{ Auth::user()->name }}
@@ -86,24 +126,23 @@
                 <a class="btn btn-outline-light btn-sm" href="/login">Login</a>
                 <a class="btn btn-light btn-sm" href="/register">Register</a>
                 @endauth
-
-                <a href="{{ auth()->check() ? '/cart' : '/login' }}" class="btn btn-outline-light btn-sm position-relative">
+                <button id="cart-toggle" class="btn btn-outline-light btn-sm position-relative">
                     🛒 Cart
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                        {{ session('cart_count', 0) }}
-                    </span>
-                </a>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cart-count">0</span>
+                </button>
             </div>
         </div>
     </nav>
 
-    @if(session('success'))
-    <div class="alert alert-success fade-message position-fixed top-0 end-0 m-3">
-        {{ session('success') }}
+    <div id="cart-panel">
+        <h5 class="mb-3">🛒 Your Cart</h5>
+        <div id="cart-items"></div>
+        <hr>
+        <p><strong>Total Items:</strong> <span id="cart-total-items">0</span></p>
+        <p><strong>Total Price:</strong> ₹<span id="cart-total-price">0.00</span></p>
+        <button id="checkout-btn" class="btn btn-primary w-100">Checkout</button>
     </div>
-    @endif
 
-    <!-- Hero -->
     <div class="hero text-center">
         <h1 class="mb-4">Welcome to Mini Amazon</h1>
         <div class="search-box">
@@ -111,7 +150,6 @@
         </div>
     </div>
 
-    <!-- Products -->
     <div class="container my-5">
         <h3 class="mb-4 text-center">Featured Products</h3>
         <div class="text-center my-3" id="loading-spinner" style="display:none;">
@@ -127,47 +165,56 @@
 
     <script>
         const BACKEND_URL = "{{ url('') }}";
-    </script>
+        let offset = 0,
+            limit = 6,
+            currentSearch = '';
 
-    <!-- Theme + Products + Cart Script -->
-    <script>
-        const htmlEl = document.documentElement;
-        const toggleBtn = document.getElementById('theme-toggle');
-        const icon = document.getElementById('theme-icon');
-
-        function applyTheme(theme) {
-            htmlEl.setAttribute('data-bs-theme', theme);
-            localStorage.setItem('theme', theme);
-            icon.textContent = theme === 'dark' ? '🌞' : '🌙';
+        function updateCartDisplay() {
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            document.getElementById('cart-count').textContent = cart.reduce((sum, item) => sum + item.qty, 0);
+            document.getElementById('cart-items').innerHTML = cart.map((item, i) => `
+                <div class="cart-item">
+                    <div class="d-flex justify-content-between">
+                        <strong>${item.name}</strong>
+                        <span class="remove-btn" onclick="removeItem(${i})">&times;</span>
+                    </div>
+                    <p>₹${item.price.toFixed(2)} × <span>${item.qty}</span></p>
+                    <div class="qty-controls">
+                        <button onclick="changeQty(${i}, -1)">-</button>
+                        <button onclick="changeQty(${i}, 1)">+</button>
+                    </div>
+                </div>`).join('');
+            document.getElementById('cart-total-items').textContent = cart.length;
+            document.getElementById('cart-total-price').textContent = cart.reduce((sum, item) => sum + item.price * item.qty, 0).toFixed(2);
+            markAddedProducts();
         }
 
-        applyTheme(localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
-        toggleBtn.addEventListener('click', () => {
-            const current = htmlEl.getAttribute('data-bs-theme');
-            applyTheme(current === 'dark' ? 'light' : 'dark');
-        });
+        function removeItem(index) {
+            if (confirm('Remove this item?')) {
+                const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                cart.splice(index, 1);
+                localStorage.setItem('cart', JSON.stringify(cart));
+                updateCartDisplay();
+            }
+        }
 
-        let offset = 0;
-        const limit = 6;
-        let currentSearch = '';
-        const loadMoreBtn = document.getElementById('load-more');
-        const productList = document.getElementById('product-list');
-        const searchInput = document.getElementById('searchInput');
-        const spinner = document.getElementById('loading-spinner');
+        function changeQty(index, delta) {
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            cart[index].qty += delta;
+            if (cart[index].qty <= 0) return removeItem(index);
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartDisplay();
+        }
 
         function fetchProducts(reset = false) {
             if (reset) offset = 0;
-            spinner.style.display = 'block';
-
+            document.getElementById('loading-spinner').style.display = 'block';
             fetch(`${BACKEND_URL}/api/products-api?limit=${limit}&offset=${offset}&search=${encodeURIComponent(currentSearch)}`)
                 .then(res => res.json())
                 .then(products => {
-                    if (reset) productList.innerHTML = '';
+                    if (reset) document.getElementById('product-list').innerHTML = '';
                     products.forEach(product => {
-                        const image = product.picture ?
-                            `${BACKEND_URL}/images/products/${product.picture}` :
-                            'https://via.placeholder.com/300x200';
-
+                        const image = product.picture ? `${BACKEND_URL}/images/products/${product.picture}` : 'https://via.placeholder.com/300x200';
                         const col = document.createElement('div');
                         col.className = 'col-md-4 col-sm-6';
                         col.innerHTML = `
@@ -179,95 +226,102 @@
                                     <p class="fw-bold">₹${parseFloat(product.price).toFixed(2)}</p>
                                     <div class="d-flex justify-content-between mt-auto gap-2">
                                         <a href="/product/${product.id}" class="btn btn-primary w-50">Buy Now</a>
-                                        <button class="btn btn-outline-secondary w-50 add-to-cart"
-                                            data-id="${product.id}"
-                                            data-name="${product.name}"
-                                            data-price="${product.price}"
-                                            data-image="${image}">
-                                            🛒 Add to Cart
-                                        </button>
+                                        <button class="btn btn-outline-secondary w-50" onclick='addToCart(${JSON.stringify(product)})'>Add to Cart</button>
                                     </div>
                                 </div>
                             </div>`;
-                        productList.appendChild(col);
+                        document.getElementById('product-list').appendChild(col);
                     });
-
                     offset += limit;
-                    loadMoreBtn.style.display = products.length < limit ? 'none' : 'inline-block';
-                    markAddedProducts(); // update cart button states
+                    markAddedProducts();
                 })
-                .finally(() => {
-                    spinner.style.display = 'none';
-                });
+                .finally(() => document.getElementById('loading-spinner').style.display = 'none');
         }
 
-        loadMoreBtn.addEventListener('click', () => fetchProducts());
-
-        let typingTimer;
-        searchInput.addEventListener('input', () => {
-            clearTimeout(typingTimer);
-            typingTimer = setTimeout(() => {
-                currentSearch = searchInput.value.trim();
-                fetchProducts(true);
-            }, 300);
-        });
-
-        function updateCartBadge() {
+        function addToCart(product) {
             const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-            const count = cart.reduce((sum, item) => sum + item.qty, 0);
-            const badge = document.querySelector('.badge.bg-danger');
-            if (badge) badge.textContent = count;
+            const index = cart.findIndex(item => item.id == product.id);
+            const btn = event.target;
+
+            if (index > -1) {
+                if (confirm('Remove from cart?')) {
+                    cart.splice(index, 1);
+                    btn.textContent = 'Add to Cart';
+                    btn.classList.remove('btn-primary');
+                    btn.classList.add('btn-outline-secondary');
+                } else return;
+            } else {
+                cart.push({
+                    id: product.id,
+                    name: product.name,
+                    price: parseFloat(product.price),
+                    qty: 1
+                });
+                btn.textContent = '✅ Added';
+                btn.classList.remove('btn-outline-secondary');
+                btn.classList.add('btn-primary');
+            }
+            localStorage.setItem('cart', JSON.stringify(cart));
+            updateCartDisplay();
         }
 
         function markAddedProducts() {
             const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-            document.querySelectorAll('.add-to-cart').forEach(btn => {
-                const id = btn.getAttribute('data-id');
-                const exists = cart.find(item => item.id == id);
-                btn.textContent = exists ? '✅ Added' : '🛒 Add to Cart';
-                btn.classList.toggle('active', !!exists);
+            document.querySelectorAll('button[onclick^="addToCart"]').forEach(btn => {
+                const name = btn.closest('.product-card').querySelector('.card-title').textContent;
+                const found = cart.find(item => item.name === name);
+                if (found) {
+                    btn.textContent = '✅ Added';
+                    btn.classList.remove('btn-outline-secondary');
+                    btn.classList.add('btn-primary');
+                } else {
+                    btn.textContent = 'Add to Cart';
+                    btn.classList.remove('btn-primary');
+                    btn.classList.add('btn-outline-secondary');
+                }
             });
         }
 
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('add-to-cart')) {
-                const btn = e.target;
+        document.getElementById('cart-toggle').onclick = () => {
+            const panel = document.getElementById('cart-panel');
+            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+            updateCartDisplay();
+        };
 
-                const id = btn.getAttribute('data-id');
-                const name = btn.getAttribute('data-name');
-                const price = parseFloat(btn.getAttribute('data-price'));
-                const image = btn.getAttribute('data-image');
+        document.getElementById('checkout-btn').onclick = () => {
+            if (confirm('Proceed to checkout?')) alert('Checkout logic here');
+        };
 
-                let cart = JSON.parse(localStorage.getItem('cart') || '[]');
-                const index = cart.findIndex(item => item.id == id);
-
-                if (index > -1) {
-                    cart.splice(index, 1); // Remove
-                    btn.textContent = '🛒 Add to Cart';
-                    btn.classList.remove('active');
-                } else {
-                    cart.push({
-                        id,
-                        name,
-                        price,
-                        image,
-                        qty: 1
-                    });
-                    btn.textContent = '✅ Added';
-                    btn.classList.add('active');
-                }
-
-                localStorage.setItem('cart', JSON.stringify(cart));
-                updateCartBadge();
-            }
+        document.getElementById('searchInput').addEventListener('input', () => {
+            clearTimeout(window.searchTimer);
+            window.searchTimer = setTimeout(() => {
+                currentSearch = document.getElementById('searchInput').value.trim();
+                fetchProducts(true);
+            }, 300);
         });
+
+        document.getElementById('load-more').onclick = () => fetchProducts();
 
         document.addEventListener('DOMContentLoaded', () => {
-            updateCartBadge();
+            updateCartDisplay();
             fetchProducts();
+            const htmlEl = document.documentElement;
+            const toggleBtn = document.getElementById('theme-toggle');
+            const icon = document.getElementById('theme-icon');
+
+            function applyTheme(theme) {
+                htmlEl.setAttribute('data-bs-theme', theme);
+                localStorage.setItem('theme', theme);
+                icon.textContent = theme === 'dark' ? '🌞' : '🌙';
+            }
+
+            applyTheme(localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+            toggleBtn.addEventListener('click', () => {
+                const current = htmlEl.getAttribute('data-bs-theme');
+                applyTheme(current === 'dark' ? 'light' : 'dark');
+            });
         });
     </script>
-
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
