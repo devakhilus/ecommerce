@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mini Amazon</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-
     <style>
         body {
             background-color: var(--bs-body-bg);
@@ -115,26 +114,22 @@
     <!-- Products -->
     <div class="container my-5">
         <h3 class="mb-4 text-center">Featured Products</h3>
-
         <div class="text-center my-3" id="loading-spinner" style="display:none;">
             <div class="spinner-border text-primary" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
         </div>
-
         <div class="row g-4" id="product-list"></div>
-
         <div class="text-center mt-4">
             <button id="load-more" class="btn btn-outline-primary">Load More</button>
         </div>
     </div>
 
-    <!-- Dynamic Backend URL -->
     <script>
-        const BACKEND_URL = "{{ url('') }}"; // Use raw backend URL for localhost or prod
+        const BACKEND_URL = "{{ url('') }}";
     </script>
 
-    <!-- Theme + Product Scripts -->
+    <!-- Theme + Products + Cart Script -->
     <script>
         const htmlEl = document.documentElement;
         const toggleBtn = document.getElementById('theme-toggle');
@@ -147,7 +142,6 @@
         }
 
         applyTheme(localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
-
         toggleBtn.addEventListener('click', () => {
             const current = htmlEl.getAttribute('data-bs-theme');
             applyTheme(current === 'dark' ? 'light' : 'dark');
@@ -183,7 +177,16 @@
                                     <h5 class="card-title">${product.name}</h5>
                                     <p class="card-text flex-grow-1">${(product.description ?? '').substring(0, 100)}</p>
                                     <p class="fw-bold">₹${parseFloat(product.price).toFixed(2)}</p>
-                                    <a href="/product/${product.id}" class="btn btn-primary mt-auto">Buy Now</a>
+                                    <div class="d-flex justify-content-between mt-auto gap-2">
+                                        <a href="/product/${product.id}" class="btn btn-primary w-50">Buy Now</a>
+                                        <button class="btn btn-outline-secondary w-50 add-to-cart"
+                                            data-id="${product.id}"
+                                            data-name="${product.name}"
+                                            data-price="${product.price}"
+                                            data-image="${image}">
+                                            🛒 Add to Cart
+                                        </button>
+                                    </div>
                                 </div>
                             </div>`;
                         productList.appendChild(col);
@@ -191,6 +194,7 @@
 
                     offset += limit;
                     loadMoreBtn.style.display = products.length < limit ? 'none' : 'inline-block';
+                    markAddedProducts(); // update cart button states
                 })
                 .finally(() => {
                     spinner.style.display = 'none';
@@ -208,8 +212,60 @@
             }, 300);
         });
 
-        // Initial load
-        fetchProducts();
+        function updateCartBadge() {
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            const count = cart.reduce((sum, item) => sum + item.qty, 0);
+            const badge = document.querySelector('.badge.bg-danger');
+            if (badge) badge.textContent = count;
+        }
+
+        function markAddedProducts() {
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            document.querySelectorAll('.add-to-cart').forEach(btn => {
+                const id = btn.getAttribute('data-id');
+                const exists = cart.find(item => item.id == id);
+                btn.textContent = exists ? '✅ Added' : '🛒 Add to Cart';
+                btn.classList.toggle('active', !!exists);
+            });
+        }
+
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('add-to-cart')) {
+                const btn = e.target;
+
+                const id = btn.getAttribute('data-id');
+                const name = btn.getAttribute('data-name');
+                const price = parseFloat(btn.getAttribute('data-price'));
+                const image = btn.getAttribute('data-image');
+
+                let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                const index = cart.findIndex(item => item.id == id);
+
+                if (index > -1) {
+                    cart.splice(index, 1); // Remove
+                    btn.textContent = '🛒 Add to Cart';
+                    btn.classList.remove('active');
+                } else {
+                    cart.push({
+                        id,
+                        name,
+                        price,
+                        image,
+                        qty: 1
+                    });
+                    btn.textContent = '✅ Added';
+                    btn.classList.add('active');
+                }
+
+                localStorage.setItem('cart', JSON.stringify(cart));
+                updateCartBadge();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateCartBadge();
+            fetchProducts();
+        });
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
