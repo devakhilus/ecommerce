@@ -16,6 +16,10 @@ class HomeController extends Controller
             $product->image_url = $product->picture
                 ? asset('images/products/' . $product->picture)
                 : 'https://via.placeholder.com/300x200';
+
+            // ✅ Ensure stock is available in the view if needed
+            $product->stock = $product->stock;
+
             return $product;
         });
 
@@ -46,6 +50,10 @@ class HomeController extends Controller
             $product->image_url = $product->picture
                 ? asset('images/products/' . $product->picture)
                 : 'https://via.placeholder.com/300x200';
+
+            // ✅ Add stock to API JSON response
+            $product->stock = $product->stock;
+
             return $product;
         });
 
