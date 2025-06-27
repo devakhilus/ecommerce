@@ -36,7 +36,11 @@
                 <label class="form-label">Confirm Password</label>
                 <input type="password" name="password_confirmation" class="form-control" required>
             </div>
+            <div class="mb-3">
+                <label for="home_address" class="form-label">Home Address (optional)</label>
+                <textarea id="home_address" name="home_address" class="form-control">{{ old('home_address') }}</textarea>
 
+            </div>
             <button class="btn btn-primary w-100">Register</button>
         </form>
 

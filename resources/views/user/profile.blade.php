@@ -34,6 +34,12 @@
             <label for="password_confirmation" class="form-label">Confirm New Password</label>
             <input type="password" id="password_confirmation" name="password_confirmation" class="form-control">
         </div>
+        <div class="mb-3">
+            <label for="home_address" class="form-label">Home Address</label>
+            <input type="text" id="home_address" name="home_address" class="form-control"
+                value="{{ old('home_address', Auth::user()->home_address) }}">
+        </div>
+
         <button class="btn btn-primary">Update Profile</button>
     </form>
 </div>

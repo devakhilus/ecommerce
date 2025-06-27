@@ -20,10 +20,12 @@ class ProfileController extends Controller
             'name' => 'required|string',
             'email' => 'required|email|unique:users,email,' . $user->id,
             'password' => 'nullable|confirmed|min:6',
+            'home_address' => 'nullable|string|max:255'
         ]);
 
         $user->name = $request->name;
         $user->email = $request->email;
+        $user->home_address = $request->home_address;
 
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
