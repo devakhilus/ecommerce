@@ -20,7 +20,8 @@
 
         <!-- Add New Product Button -->
         <div class="mb-3">
-            <a href="{{ route('products.create') }}" class="btn btn-primary">
+            <a href="{{ route('admin.products.create') }}" class="btn btn-primary">
+
                 <i class="fas fa-plus-circle"></i> Add New Product
             </a>
         </div>
@@ -52,10 +53,10 @@
                                 <td>{{ $product->stock }}</td>
                                 <td>{{ $product->category->name ?? '-' }}</td>
                                 <td>
-                                    <a href="{{ route('products.edit', $product->id) }}" class="btn btn-sm btn-warning mb-1">
+                                    <a href="{{ route('admin.products.edit', $product->id) }}" class="btn btn-sm btn-warning mb-1">
                                         <i class="fas fa-edit"></i> Edit
                                     </a>
-                                    <form action="{{ route('products.destroy', $product->id) }}" method="POST" style="display:inline-block;">
+                                    <form action="{{ route('admin.products.destroy', $product->id) }}" method="POST" style="display:inline-block;">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">

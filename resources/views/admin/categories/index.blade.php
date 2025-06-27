@@ -20,7 +20,7 @@
 
         <!-- Add New Category Button -->
         <div class="mb-3">
-            <a href="{{ route('categories.create') }}" class="btn btn-primary">
+            <a href="{{ route('admin.categories.create') }}" class="btn btn-primary">
                 <i class="fas fa-plus-circle"></i> Add New Category
             </a>
         </div>
@@ -46,10 +46,10 @@
                                 <td>{{ $category->id }}</td>
                                 <td>{{ $category->name }}</td>
                                 <td>
-                                    <a href="{{ route('categories.edit', $category->id) }}" class="btn btn-sm btn-warning mb-1">
+                                    <a href="{{ route('admin.categories.edit', $category->id) }}" class="btn btn-sm btn-warning mb-1">
                                         <i class="fas fa-edit"></i> Edit
                                     </a>
-                                    <form action="{{ route('categories.destroy', $category->id) }}" method="POST" style="display:inline-block;">
+                                    <form action="{{ route('admin.categories.destroy', $category->id) }}" method="POST" style="display:inline-block;">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
                                             <i class="fas fa-trash"></i> Delete

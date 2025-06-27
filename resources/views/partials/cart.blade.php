@@ -13,8 +13,9 @@
         </select>
 
         <div id="custom-address-wrapper" class="mt-2 d-none">
-            <input type="text" id="custom-address" class="form-control" placeholder="Enter new delivery address" />
+            <input type="text" id="custom-address" class="form-control" placeholder="Enter custom delivery address">
         </div>
+
     </div>
     @endauth
 

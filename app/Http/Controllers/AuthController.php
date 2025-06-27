@@ -22,6 +22,14 @@ class AuthController extends Controller
         ]);
 
         if (Auth::attempt($request->only('email', 'password'))) {
+            $user = Auth::user();
+
+            // ✅ Require email verification only for non-admin users
+            if (!$user->is_admin && !$user->hasVerifiedEmail()) {
+                Auth::logout();
+                return back()->withErrors(['email' => 'Please verify your email address first.']);
+            }
+
             return redirect()->intended('/dashboard');
         }
 
@@ -50,7 +58,7 @@ class AuthController extends Controller
             'is_admin' => 0
         ]);
 
-        // 🔔 Send email verification
+        // 🔔 Send email verification only to regular users
         $user->sendEmailVerificationNotification();
 
         return redirect('/login')->with('success', 'Registration successful. Please verify your email.');

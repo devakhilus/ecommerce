@@ -1,6 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
     updateCartDisplay();
     setupAddressDropdown();
+
+    const checkoutBtn = document.getElementById('checkout-btn');
+    if (checkoutBtn) {
+        checkoutBtn.addEventListener('click', handleCheckout);
+    }
 });
 
 function setupAddressDropdown() {
@@ -11,9 +16,9 @@ function setupAddressDropdown() {
 
     dropdown.addEventListener('change', function () {
         if (this.value === 'other') {
-            customInputWrapper.classList.remove('d-none');
+            customInputWrapper?.classList.remove('d-none');
         } else {
-            customInputWrapper.classList.add('d-none');
+            customInputWrapper?.classList.add('d-none');
         }
     });
 }
@@ -83,7 +88,7 @@ function changeQty(index, delta) {
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
     cart[index].qty += delta;
     if (cart[index].qty <= 0) return removeItem(index);
-    if (cart[index].qty > cart[index].stock) cart[index].qty = cart[index].stock; // 🔒 enforce max
+    if (cart[index].qty > cart[index].stock) cart[index].qty = cart[index].stock;
     localStorage.setItem('cart', JSON.stringify(cart));
     updateCartDisplay();
 }
@@ -115,4 +120,33 @@ function addToCart(product) {
 
     localStorage.setItem('cart', JSON.stringify(cart));
     updateCartDisplay();
+}
+
+function handleCheckout() {
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    const addressSelect = document.getElementById('delivery-address');
+    const customAddressInput = document.getElementById('custom-address');
+
+    const selectedAddress = addressSelect?.value || '';
+    const customAddress = customAddressInput?.value || '';
+
+    const finalAddress = selectedAddress === 'other' ? customAddress : selectedAddress;
+
+    if (!finalAddress.trim()) {
+        alert('Please select or enter a delivery address.');
+        return;
+    }
+
+    if (cart.length === 0) {
+        alert('Your cart is empty.');
+        return;
+    }
+
+    if (confirm('Proceed to checkout?')) {
+        localStorage.setItem('checkoutData', JSON.stringify({
+            cart,
+            address: finalAddress
+        }));
+        window.location.href = '/checkout';
+    }
 }

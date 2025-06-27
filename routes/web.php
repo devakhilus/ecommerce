@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\OrderController as FrontOrderController;
 
 // Public routes
 Route::get('/', [HomeController::class, 'welcome']);
@@ -36,8 +37,8 @@ Route::post('/email/verification-notification', function (Request $request) {
 })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
 
 
-// 🛡️ Protected routes (logged-in + verified users)
-Route::middleware(['auth', 'verified'])->group(function () {
+// 🛡️ Protected routes (logged-in + verified users or admin)
+Route::middleware(['auth', 'verified_or_admin'])->group(function () {
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -50,6 +51,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
             : view('user.dashboard');
     })->name('dashboard');
 
+    // 🛒 Orders
+    Route::get('/checkout', [FrontOrderController::class, 'checkout']);
+    Route::post('/orders', [FrontOrderController::class, 'store'])->name('orders.store');
+
     // 🛠️ Admin routes (for admins only)
     Route::middleware('can:isAdmin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
@@ -57,6 +62,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('users', UserController::class);
         Route::resource('categories', CategoryController::class);
         Route::resource('products', ProductController::class);
-        Route::resource('orders', OrderController::class)->names('admin.orders');
+        Route::resource('orders', OrderController::class);
     });
 });
