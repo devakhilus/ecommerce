@@ -5,9 +5,6 @@ namespace App\Models;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
-use App\Notifications\VerifyEmail;
-use App\Notifications\CustomVerifyEmail;
-
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -25,8 +22,4 @@ class User extends Authenticatable implements MustVerifyEmail
         'password',
         'remember_token',
     ];
-    public function sendEmailVerificationNotification()
-    {
-        $this->notify(new CustomVerifyEmail);
-    }
 }
