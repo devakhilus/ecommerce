@@ -1,3 +1,40 @@
+document.addEventListener('DOMContentLoaded', () => {
+    updateCartDisplay();
+    setupAddressDropdown();
+});
+
+function setupAddressDropdown() {
+    const dropdown = document.getElementById('delivery-address');
+    const customInputWrapper = document.getElementById('custom-address-wrapper');
+
+    if (!dropdown) return;
+
+    dropdown.addEventListener('change', function () {
+        if (this.value === 'other') {
+            customInputWrapper.classList.remove('d-none');
+        } else {
+            customInputWrapper.classList.add('d-none');
+        }
+    });
+}
+
+function markAddedProducts() {
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    document.querySelectorAll('button[onclick^="addToCart"]').forEach(btn => {
+        const name = btn.closest('.product-card').querySelector('.card-title').textContent;
+        const found = cart.find(item => item.name === name);
+        if (found) {
+            btn.textContent = '✅ Added';
+            btn.classList.remove('btn-outline-secondary');
+            btn.classList.add('btn-primary');
+        } else {
+            btn.textContent = 'Add to Cart';
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-outline-secondary');
+        }
+    });
+}
+
 function updateCartDisplay() {
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
     document.getElementById('cart-count').textContent = cart.reduce((sum, item) => sum + item.qty, 0);
@@ -11,15 +48,16 @@ function updateCartDisplay() {
             : `<small class="text-success">${remaining} in stock</small>`;
 
         return `
-            <div class="cart-item">
+            <div class="cart-item mb-3">
                 <div class="d-flex justify-content-between">
                     <strong>${item.name}</strong>
-                    <span class="remove-btn" onclick="removeItem(${i})">&times;</span>
+                    <span class="remove-btn text-danger fw-bold" onclick="removeItem(${i})" style="cursor: pointer;">&times;</span>
                 </div>
                 <p>₹${item.price.toFixed(2)} × <span>${item.qty}</span></p>
-                <div class="qty-controls d-flex gap-1">
-                    <button onclick="changeQty(${i}, -1)">-</button>
-                    <button onclick="changeQty(${i}, 1)" ${atMax ? 'disabled' : ''}>+</button>
+                <div class="qty-controls d-flex gap-2 align-items-center">
+                    <button onclick="changeQty(${i}, -1)" class="btn btn-sm btn-outline-secondary">-</button>
+                    <span>${item.qty}</span>
+                    <button onclick="changeQty(${i}, 1)" class="btn btn-sm btn-outline-secondary" ${atMax ? 'disabled' : ''}>+</button>
                 </div>
                 ${stockMsg}
             </div>`;
@@ -68,7 +106,7 @@ function addToCart(product) {
             name: product.name,
             price: parseFloat(product.price),
             qty: 1,
-            stock: parseInt(product.stock) || 0 // ✅ store stock
+            stock: parseInt(product.stock) || 0
         });
         btn.textContent = '✅ Added';
         btn.classList.remove('btn-outline-secondary');
@@ -77,21 +115,4 @@ function addToCart(product) {
 
     localStorage.setItem('cart', JSON.stringify(cart));
     updateCartDisplay();
-}
-
-function markAddedProducts() {
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    document.querySelectorAll('button[onclick^="addToCart"]').forEach(btn => {
-        const name = btn.closest('.product-card').querySelector('.card-title').textContent;
-        const found = cart.find(item => item.name === name);
-        if (found) {
-            btn.textContent = '✅ Added';
-            btn.classList.remove('btn-outline-secondary');
-            btn.classList.add('btn-primary');
-        } else {
-            btn.textContent = 'Add to Cart';
-            btn.classList.remove('btn-primary');
-            btn.classList.add('btn-outline-secondary');
-        }
-    });
 }
