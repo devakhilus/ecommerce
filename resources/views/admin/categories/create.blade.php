@@ -14,7 +14,7 @@
 
         <!-- Back Button -->
         <div class="mb-3">
-            <a href="{{ route('categories.index') }}" class="btn btn-secondary">
+            <a href="{{ route('admin.categories.index') }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Back to List
             </a>
         </div>
@@ -25,7 +25,7 @@
                 <h3 class="card-title">Create Category</h3>
             </div>
 
-            <form action="{{ route('categories.store') }}" method="POST">
+            <form action="{{ route('admin.categories.store') }}" method="POST">
                 @csrf
                 <div class="card-body">
                     <!-- Category Name -->

@@ -13,7 +13,7 @@
     <div class="container-fluid">
 
         <div class="mb-3">
-            <a href="{{ route('products.index') }}" class="btn btn-secondary">
+            <a href="{{ route('admin.products.index') }}" class="btn btn-secondary">
                 <i class="fas fa-arrow-left"></i> Back to List
             </a>
         </div>
@@ -23,7 +23,7 @@
                 <h3 class="card-title">Create Product</h3>
             </div>
 
-            <form action="{{ route('products.store') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
 
                 <div class="card-body">
