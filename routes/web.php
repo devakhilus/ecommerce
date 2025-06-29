@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\OrderController as FrontOrderController;
 use App\Http\Controllers\PolicyController;
+use Illuminate\Support\Facades\Mail;
 
 // Public routes
 Route::get('/', [HomeController::class, 'welcome']);
@@ -72,3 +73,16 @@ Route::middleware(['auth', 'verified_or_admin'])->group(function () {
         Route::resource('orders', OrderController::class);
     });
 });
+Route::view('/contact', 'contact')->name('contact.show');
+
+Route::post('/contact', function (\Illuminate\Http\Request $request) {
+    $request->validate([
+        'name' => 'required|string',
+        'email' => 'required|email',
+        'message' => 'required|string'
+    ]);
+
+    // You can later replace this with Mail::to() for actual emailing
+    // For now, just simulate successful submission
+    return back()->with('success', '✅ Your message has been sent successfully!');
+})->name('contact.submit');

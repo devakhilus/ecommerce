@@ -52,6 +52,12 @@
         </button>
         <div class="auth-card">
             @yield('content')
+            @if(session('success'))
+            <div class="alert alert-success text-center my-3 container">
+                {{ session('success') }}
+            </div>
+            @endif
+
         </div>
     </div>
 
