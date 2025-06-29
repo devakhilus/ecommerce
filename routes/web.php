@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\OrderController as FrontOrderController;
+use App\Http\Controllers\PolicyController;
 
 // Public routes
 Route::get('/', [HomeController::class, 'welcome']);
@@ -20,6 +21,12 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::get('/register', [AuthController::class, 'showRegister']);
 Route::post('/register', [AuthController::class, 'register']);
 Route::get('/logout', [AuthController::class, 'logout']);
+
+Route::get('/privacy-policy', [PolicyController::class, 'privacy'])->name('privacy');
+Route::get('/terms-and-conditions', [PolicyController::class, 'terms'])->name('terms');
+Route::get('/cancellation-and-refund', [PolicyController::class, 'refund'])->name('refund');
+Route::get('/shipping-and-delivery', [PolicyController::class, 'shipping'])->name('shipping');
+
 
 // 📨 Email verification routes
 Route::get('/email/verify', function () {
