@@ -16,7 +16,14 @@
         {{ session('success') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
+
+    {{-- ✅ Clear cart if COD success --}}
+    <script>
+        localStorage.removeItem('cart');
+        localStorage.removeItem('checkoutData');
+    </script>
     @endif
+
 
     @yield('content')
 

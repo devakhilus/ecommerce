@@ -42,6 +42,17 @@ function markAddedProducts() {
 
 function updateCartDisplay() {
     const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+
+    // ✅ If cart is empty, show message and reset UI
+    if (!cart.length) {
+        document.getElementById('cart-items').innerHTML = '<p class="text-muted">🛒 Your cart is empty.</p>';
+        document.getElementById('cart-count').textContent = 0;
+        document.getElementById('cart-total-items').textContent = 0;
+        document.getElementById('cart-total-price').textContent = '0.00';
+        markAddedProducts();
+        return;
+    }
+
     document.getElementById('cart-count').textContent = cart.reduce((sum, item) => sum + item.qty, 0);
 
     document.getElementById('cart-items').innerHTML = cart.map((item, i) => {
@@ -74,6 +85,7 @@ function updateCartDisplay() {
 
     markAddedProducts();
 }
+
 
 function removeItem(index) {
     if (confirm('Remove this item?')) {
