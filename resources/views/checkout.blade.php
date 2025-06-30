@@ -25,7 +25,7 @@
                         </tr>
                     </thead>
                     <tbody id="checkout-cart-items">
-                        <!-- JS will populate -->
+                        <!-- Populated by JS -->
                     </tbody>
                     <tfoot>
                         <tr>
@@ -47,13 +47,12 @@
                     <input class="form-check-input" type="radio" name="payment_method" value="cod" checked>
                     <label class="form-check-label">💵 Cash on Delivery</label>
                 </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="radio" name="payment_method" value="online">
-                    <label class="form-check-label">💳 Pay Online</label>
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="radio" name="payment_method" value="phonepe">
+                    <label class="form-check-label">📱 Pay Online (PhonePe)</label>
                 </div>
             </div>
 
-            <!-- Submit -->
             <button type="submit" class="btn btn-success w-100 btn-lg">
                 ✅ Confirm & Place Order
             </button>
@@ -68,11 +67,9 @@
             const deliveryAddress = checkoutData.address || 'N/A';
             const cart = checkoutData.cart || [];
 
-            // Fill delivery address
             document.getElementById('delivery-address').textContent = deliveryAddress;
             document.getElementById('delivery-address-input').value = deliveryAddress;
 
-            // Fill cart table
             const tableBody = document.getElementById('checkout-cart-items');
             const totalEl = document.getElementById('checkout-cart-total');
             let grandTotal = 0;
@@ -94,18 +91,51 @@
             totalEl.textContent = `₹${grandTotal.toFixed(2)}`;
             document.getElementById('cart-json').value = JSON.stringify(cart);
 
-            // Handle form submit
-            document.getElementById('order-form').addEventListener('submit', function() {
+            const form = document.getElementById('order-form');
+            form.addEventListener('submit', function(e) {
                 const selected = document.querySelector('input[name="payment_method"]:checked')?.value;
                 document.getElementById('selected-payment-method').value = selected || 'cod';
 
-                // ✅ Clear cart after placing order
-                localStorage.removeItem('cart');
-                localStorage.removeItem('checkoutData');
+                if (selected === 'phonepe') {
+                    e.preventDefault();
+
+                    // Dynamic form for PhonePe
+                    const phonepeRoute = "{{ route('phonepe.pay') }}";
+                    const tempForm = document.createElement('form');
+                    tempForm.method = 'POST';
+                    tempForm.action = phonepeRoute;
+
+                    const csrf = document.createElement('input');
+                    csrf.type = 'hidden';
+                    csrf.name = '_token';
+                    csrf.value = '{{ csrf_token() }}';
+
+                    const amt = document.createElement('input');
+                    amt.type = 'hidden';
+                    amt.name = 'amount';
+                    amt.value = grandTotal.toFixed(2);
+
+                    const addressInput = document.createElement('input');
+                    addressInput.type = 'hidden';
+                    addressInput.name = 'delivery_address';
+                    addressInput.value = deliveryAddress;
+
+                    const cartInput = document.createElement('input');
+                    cartInput.type = 'hidden';
+                    cartInput.name = 'cart_data';
+                    cartInput.value = JSON.stringify(cart);
+
+                    tempForm.appendChild(csrf);
+                    tempForm.appendChild(amt);
+                    tempForm.appendChild(addressInput);
+                    tempForm.appendChild(cartInput);
+                    document.body.appendChild(tempForm);
+                    tempForm.submit();
+                }
             });
 
         } catch (error) {
-            alert('Checkout data is missing or invalid. Please go back and retry.');
+            alert('Checkout data is missing or corrupted. Please re-check.');
             console.error(error);
         }
     });
